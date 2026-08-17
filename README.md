@@ -2,9 +2,15 @@
 
 English | [中文](README.zh.md)
 
-`dsh-plugin-remote-access` is an installable bundle for the DeepSeek Harness Web profile. It adds a Remote Access settings section, starts LAN access or an `frpc` tunnel on demand, and produces authenticated links for controlling the full Web UI from another computer, tablet, or phone.
+`@xiaosenho/dsh-plugin-remote-access` is an installable bundle for the DeepSeek Harness Web profile. It adds a Remote Access settings section, starts LAN access or an `frpc` tunnel on demand, and produces authenticated links for controlling the full Web UI from another computer, tablet, or phone.
 
 ## Install
+
+Install from npm:
+
+```sh
+dsh plugin --profile web add @xiaosenho/dsh-plugin-remote-access
+```
 
 Install a local checkout:
 
@@ -15,14 +21,14 @@ dsh plugin --profile web add ./dsh-plugin-remote-access
 Pin a commit when installing from a Git repository:
 
 ```sh
-dsh plugin --profile web add github:<owner>/dsh-plugin-remote-access#<commit>
+dsh plugin --profile web add github:xiaosenho/dsh-plugin-remote-access#<commit>
 ```
 
 A Git install runs this package's `prepare` build. pnpm initially refuses an unapproved dependency build; follow the `dsh` diagnostic, allow the package in the Web profile's `pnpm-workspace.yaml`, then repeat the install:
 
 ```yaml
 allowBuilds:
-  dsh-plugin-remote-access: true
+  '@xiaosenho/dsh-plugin-remote-access': true
 ```
 
 This permission lets the dependency execute build code on the host. Install only trusted source and pin a commit. An npm release or tarball containing `lib/` needs no Git `prepare` permission.
@@ -80,4 +86,4 @@ pnpm run test
 pnpm run build
 ```
 
-`pnpm pack` creates a prebuilt archive installable with `dsh plugin --profile web add ./dsh-plugin-remote-access-0.1.2.tgz`.
+`pnpm pack` creates a prebuilt archive installable with `dsh plugin --profile web add ./xiaosenho-dsh-plugin-remote-access-0.1.2.tgz`.

@@ -1,5 +1,5 @@
 {
-  "name": "dsh-plugin-remote-access",
+  "name": "@xiaosenho/dsh-plugin-remote-access",
   "version": "0.1.2",
   "description": "Authenticated LAN and frpc tunnel access for the DeepSeek Harness Web UI",
   "type": "module",
@@ -44,6 +44,17 @@
   },
   "engines": {
     "node": "^22.19.0 || >=24.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xiaosenho/dsh-plugin-remote-access.git"
+  },
+  "homepage": "https://github.com/xiaosenho/dsh-plugin-remote-access#readme",
+  "bugs": {
+    "url": "https://github.com/xiaosenho/dsh-plugin-remote-access/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "license": "MIT",
   "dependencies": {

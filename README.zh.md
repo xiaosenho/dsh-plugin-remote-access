@@ -2,9 +2,15 @@
 
 [English](README.md) | 中文
 
-`dsh-plugin-remote-access` 是 DeepSeek Harness Web profile 的可安装组合包。它在设置面板添加“远程连接”，可按需开启局域网访问或通过 `frpc` 连接现有 `frps` 服务，并生成可复制的认证链接供电脑、平板和手机访问完整 Web UI。
+`@xiaosenho/dsh-plugin-remote-access` 是 DeepSeek Harness Web profile 的可安装组合包。它在设置面板添加“远程连接”，可按需开启局域网访问或通过 `frpc` 连接现有 `frps` 服务，并生成可复制的认证链接供电脑、平板和手机访问完整 Web UI。
 
 ## 安装
+
+从 npm 安装：
+
+```sh
+dsh plugin --profile web add @xiaosenho/dsh-plugin-remote-access
+```
 
 从本地 checkout 安装：
 
@@ -15,14 +21,14 @@ dsh plugin --profile web add ./dsh-plugin-remote-access
 从 Git 仓库安装时请固定提交：
 
 ```sh
-dsh plugin --profile web add github:<owner>/dsh-plugin-remote-access#<commit>
+dsh plugin --profile web add github:xiaosenho/dsh-plugin-remote-access#<commit>
 ```
 
 Git 安装会运行本包的 `prepare` 构建。pnpm 首次会拒绝未授权的构建脚本；按 `dsh` 输出的提示，在 Web profile 的 `pnpm-workspace.yaml` 中授权后重新执行安装：
 
 ```yaml
 allowBuilds:
-  dsh-plugin-remote-access: true
+  '@xiaosenho/dsh-plugin-remote-access': true
 ```
 
 此授权允许安装包在宿主机执行构建代码。仅安装可信来源并固定提交。发布到 npm 或使用包含 `lib/` 的 tarball 时不需要 Git `prepare` 授权。
@@ -80,4 +86,4 @@ pnpm run test
 pnpm run build
 ```
 
-`pnpm pack` 生成可直接通过 `dsh plugin --profile web add ./dsh-plugin-remote-access-0.1.2.tgz` 安装的预构建包。
+`pnpm pack` 生成可直接通过 `dsh plugin --profile web add ./xiaosenho-dsh-plugin-remote-access-0.1.2.tgz` 安装的预构建包。
