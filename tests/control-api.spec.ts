@@ -10,6 +10,7 @@ const snapshot: RemoteAccessSnapshot = {
     enabled: false,
     mode: 'lan',
     listenPort: 3081,
+    frpcPath: 'frpc',
     serverAddr: '',
     serverPort: 7000,
     tunnelEndpoint: 'domain',
@@ -60,6 +61,7 @@ describe('control route', () => {
       update,
       enable: vi.fn().mockResolvedValue(snapshot),
       disable: vi.fn().mockResolvedValue(snapshot),
+      pickFrpc: vi.fn().mockResolvedValue('/usr/local/bin/frpc'),
     }
     const route = createControlRoute(controller, 1024)
     server = createServer((request, response) => { void route.handler(request, response) })
@@ -78,6 +80,16 @@ describe('control route', () => {
     expect(saved.status).toBe(200)
     expect(update).toHaveBeenCalledWith({ mode: 'tunnel', serverPort: 7001 })
 
+    const picked = await fetch(`${base}/pick-frpc`, { method: 'POST' })
+    expect(picked.status).toBe(200)
+    expect(await picked.json()).toEqual({ path: '/usr/local/bin/frpc' })
+
+    const remotePick = await fetch(`${base}/pick-frpc`, {
+      method: 'POST',
+      headers: { 'x-dsh-remote-access-proxy': '1' },
+    })
+    expect(remotePick.status).toBe(403)
+
     expect(await requestWithHost(port, 'attacker.example')).toBe(403)
     expect((await fetch(`${base}/enable`, { method: 'POST', headers: { 'sec-fetch-site': 'cross-site' } })).status).toBe(403)
   })
@@ -88,6 +100,7 @@ describe('control route', () => {
       update: vi.fn().mockResolvedValue(snapshot),
       enable: vi.fn().mockResolvedValue(snapshot),
       disable: vi.fn().mockResolvedValue(snapshot),
+      pickFrpc: vi.fn().mockResolvedValue(null),
     }
     const route = createControlRoute(controller, 16)
     server = createServer((request, response) => { void route.handler(request, response) })

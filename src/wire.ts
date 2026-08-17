@@ -6,6 +6,7 @@ import type { RemoteAccessSnapshot, RemoteAccessUpdate } from './types.ts'
 export const RemoteAccessUpdateSchema = z.strictObject({
   mode: z.enum(['lan', 'tunnel']).optional(),
   listenPort: z.number().int().min(1).max(65535).optional(),
+  frpcPath: z.string().optional(),
   serverAddr: z.string().optional(),
   serverPort: z.number().int().min(1).max(65535).optional(),
   serverToken: z.string().optional(),
@@ -20,6 +21,7 @@ export const RemoteAccessSnapshotSchema = z.strictObject({
     enabled: z.boolean(),
     mode: z.enum(['lan', 'tunnel']),
     listenPort: z.number().int().min(1).max(65535),
+    frpcPath: z.string().default('frpc'),
     serverAddr: z.string(),
     serverPort: z.number().int().min(1).max(65535),
     tunnelEndpoint: z.enum(['domain', 'ip']).optional(),
@@ -33,6 +35,8 @@ export const RemoteAccessSnapshotSchema = z.strictObject({
 })
 
 export const RemoteAccessErrorSchema = z.strictObject({ error: z.string() })
+
+export const FrpcSelectionSchema = z.strictObject({ path: z.string().nullable() })
 
 /** Validate one browser mutation and expose its exact-optional public type. */
 export function parseRemoteAccessUpdate(value: unknown): RemoteAccessUpdate {

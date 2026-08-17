@@ -1,7 +1,7 @@
 /** Browser client for the package-owned remote-access control route. */
 
 import type { RemoteAccessSnapshot, RemoteAccessUpdate } from '../types.ts'
-import { parseRemoteAccessSnapshot, RemoteAccessErrorSchema } from '../wire.ts'
+import { FrpcSelectionSchema, parseRemoteAccessSnapshot, RemoteAccessErrorSchema } from '../wire.ts'
 
 const BASE_PATH = '/_dsh/remote-access'
 
@@ -21,10 +21,21 @@ async function call(action: string, request?: RemoteAccessUpdate): Promise<Remot
   return parseRemoteAccessSnapshot(json)
 }
 
+async function pickFrpc(): Promise<string | null> {
+  const response = await fetch(`${BASE_PATH}/pick-frpc`, { method: 'POST' })
+  const json: unknown = await response.json()
+  if (!response.ok) {
+    const parsed = RemoteAccessErrorSchema.safeParse(json)
+    throw new Error(parsed.success ? parsed.data.error : `remote-access request failed with HTTP ${String(response.status)}`)
+  }
+  return FrpcSelectionSchema.parse(json).path
+}
+
 /** Browser operations injected into the Settings component. */
 export const remoteAccessApi = {
   status: (): Promise<RemoteAccessSnapshot> => call('status'),
   update: (request: RemoteAccessUpdate): Promise<RemoteAccessSnapshot> => call('update', request),
   enable: (): Promise<RemoteAccessSnapshot> => call('enable'),
   disable: (): Promise<RemoteAccessSnapshot> => call('disable'),
+  pickFrpc,
 }

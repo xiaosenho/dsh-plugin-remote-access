@@ -1,6 +1,6 @@
 {
   "name": "@xiaosenho/dsh-plugin-remote-access",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Authenticated LAN and frpc tunnel access for the DeepSeek Harness Web UI",
   "type": "module",
   "main": "lib/index.js",
@@ -58,6 +58,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@deepseek-ai/dsh-native-command": "0.1.0-rc.6",
     "zod": "^4.4.3"
   },
   "peerDependencies": {

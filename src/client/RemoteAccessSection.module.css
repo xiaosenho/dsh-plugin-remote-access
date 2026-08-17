@@ -120,6 +120,23 @@
   box-sizing: border-box;
 }
 
+.pathPicker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px;
+  align-items: center;
+  gap: 8px;
+}
+
+.pathPicker > span {
+  width: 100%;
+  min-width: 0;
+}
+
+.pathPicker > button {
+  width: 36px;
+  padding: 0;
+}
+
 .twoColumns {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 160px;

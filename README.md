@@ -43,7 +43,7 @@ The token in the link is an access credential. The first request exchanges it fo
 
 ## Tunnel access
 
-The host must provide an `frpc` executable compatible with the server's `frps` version. The plugin resolves `frpc` from `PATH` by default. Override the path and process limits in the Web profile's `cordis.patch.yml` when needed:
+The host must provide an `frpc` executable compatible with the server's `frps` version. In Settings, enter its absolute path or use the file button to select the local executable. The plugin resolves `frpc` from `PATH` by default; `frpcPath` in the Web profile remains the deployment fallback and the other process limits are configured there:
 
 ```yaml
 - id: remote-access
@@ -58,6 +58,7 @@ The host must provide an `frpc` executable compatible with the server's `frps` v
 
 Select Tunnel in Settings and provide:
 
+- frpc client: the local executable path, selected with the host's native file chooser or entered manually.
 - Server address: the `frps` control hostname or IP.
 - Server port: `frps.bindPort`, commonly `7000`.
 - `server.token`: the same token configured as `[auth].token` on the server.
@@ -75,6 +76,7 @@ The plugin also installs a browser-side `crypto.randomUUID()` compatibility meth
 - HTTP and WebSocket requests without a valid cookie receive `401` at the authenticated proxy.
 - `server.token` is a secret Harness setting. It is written only to a `0600` TOML file in a random private directory and never appears in argv, browser responses, or access links.
 - The control API accepts only a loopback socket, loopback Host, and same-origin browser context. Remote browsers reach it only through the authenticated proxy, which rewrites the upstream request to loopback.
+- The native frpc file chooser is host-only. An authenticated remote browser can edit a path manually but cannot open a dialog on the host desktop.
 - Treat each access link as a bearer credential. Do not post it in chat, tickets, or logs. Disable and re-enable remote access if a link may have leaked.
 
 ## Develop
@@ -86,4 +88,4 @@ pnpm run test
 pnpm run build
 ```
 
-`pnpm pack` creates a prebuilt archive installable with `dsh plugin --profile web add ./xiaosenho-dsh-plugin-remote-access-0.1.2.tgz`.
+`pnpm pack` creates a prebuilt archive installable with `dsh plugin --profile web add ./xiaosenho-dsh-plugin-remote-access-0.1.3.tgz`.

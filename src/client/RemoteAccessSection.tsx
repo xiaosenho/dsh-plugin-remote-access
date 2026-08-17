@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
-  Button, IconCheckOutline16, IconCopyOutline16, IconRefreshOutline16, Input, Tooltip, writeClipboard,
+  Button, IconCheckOutline16, IconCopyOutline16, IconFolderOpenOutline16, IconRefreshOutline16, Input, Tooltip, writeClipboard,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type {
@@ -17,6 +17,7 @@ export interface RemoteAccessSectionInjected {
   readonly update: (request: RemoteAccessUpdate) => Promise<RemoteAccessSnapshot>
   readonly enable: () => Promise<RemoteAccessSnapshot>
   readonly disable: () => Promise<RemoteAccessSnapshot>
+  readonly pickFrpc: () => Promise<string | null>
 }
 
 export type RemoteAccessSectionProps =
@@ -27,6 +28,7 @@ export type RemoteAccessSectionProps =
 interface Draft {
   mode: RemoteAccessMode
   listenPort: string
+  frpcPath: string
   serverAddr: string
   serverPort: string
   serverToken: string
@@ -56,6 +58,7 @@ function draftOf(snapshot: RemoteAccessSnapshot): Draft {
   return {
     mode: snapshot.settings.mode,
     listenPort: String(snapshot.settings.listenPort),
+    frpcPath: snapshot.settings.frpcPath,
     serverAddr: snapshot.settings.serverAddr,
     serverPort: String(snapshot.settings.serverPort),
     serverToken: '',
@@ -85,6 +88,7 @@ function updateOf(draft: Draft): RemoteAccessUpdate {
   return {
     mode: draft.mode,
     listenPort: Number(draft.listenPort),
+    frpcPath: draft.frpcPath.trim(),
     serverAddr: draft.serverAddr.trim(),
     serverPort: Number(draft.serverPort),
     ...(draft.serverToken === '' ? {} : { serverToken: draft.serverToken }),
@@ -160,6 +164,13 @@ export function RemoteAccessSection(props: RemoteAccessSectionProps): ReactNode 
     })
   }
   const save = (): void => { run(() => props.update(updateOf(draft))) }
+  const selectFrpc = (): void => {
+    setBusy(true)
+    setActionError(false)
+    void props.pickFrpc().then((path) => {
+      if (path !== null) set('frpcPath', path)
+    }, () => { setActionError(true) }).finally(() => { setBusy(false) })
+  }
 
   return (
     <section className={css.section} aria-label={t('title')}>
@@ -193,6 +204,20 @@ export function RemoteAccessSection(props: RemoteAccessSectionProps): ReactNode 
 
         {draft.mode === 'tunnel' ? (
           <>
+            <Field label={t('frpcPath')}>
+              <div className={css.pathPicker}>
+                <Input value={draft.frpcPath} placeholder="frpc" onChange={event => { set('frpcPath', event.target.value) }} />
+                <Tooltip label={t('selectFrpc')} side="top">
+                  <Button
+                    variant="toolbar"
+                    aria-label={t('selectFrpc')}
+                    disabled={busy}
+                    onClick={selectFrpc}
+                    icon={<IconFolderOpenOutline16 />}
+                  />
+                </Tooltip>
+              </div>
+            </Field>
             <div className={css.twoColumns}>
               <Field label={t('serverAddr')}>
                 <Input value={draft.serverAddr} onChange={event => { set('serverAddr', event.target.value) }} />

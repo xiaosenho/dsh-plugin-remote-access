@@ -3,7 +3,7 @@ import { parseRemoteAccessSnapshot } from '../src/wire.ts'
 
 describe('remote-access wire compatibility', () => {
   it('accepts settings saved before tunnel endpoint selection was introduced', () => {
-    expect(parseRemoteAccessSnapshot({
+    const settings = parseRemoteAccessSnapshot({
       settings: {
         enabled: true,
         mode: 'tunnel',
@@ -16,6 +16,8 @@ describe('remote-access wire compatibility', () => {
       },
       phase: 'running',
       links: [],
-    }).settings.tunnelEndpoint).toBeUndefined()
+    }).settings
+    expect(settings.tunnelEndpoint).toBeUndefined()
+    expect(settings.frpcPath).toBe('frpc')
   })
 })

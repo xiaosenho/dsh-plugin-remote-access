@@ -11,6 +11,7 @@ import type {} from '@deepseek-ai/dsh-subprocess'
 import { createControlRoute } from './control-api.ts'
 import { startAuthenticatedProxy, type AuthenticatedProxy } from './proxy.ts'
 import { startFrpc, type FrpcHandle } from './frpc.ts'
+import { pickNativeFrpc } from './native-picker.ts'
 import type {
   RemoteAccessSettings, RemoteAccessSettingsView, RemoteAccessSnapshot, RemoteAccessUpdate,
 } from './types.ts'
@@ -43,6 +44,7 @@ const SettingsSchema: Schema<RemoteAccessSettings> = Schema.object({
   enabled: Schema.boolean().required(),
   mode: Schema.union([Schema.const('lan'), Schema.const('tunnel')]).required(),
   listenPort: Schema.natural().min(1).max(65535).required(),
+  frpcPath: Schema.string(),
   serverAddr: Schema.string().required(),
   serverPort: Schema.natural().min(1).max(65535).required(),
   serverToken: Schema.string().role('secret').required(),
@@ -88,9 +90,13 @@ function lanBases(port: number): string[] {
     .map(entry => `http://${entry.address}:${String(port)}`)
 }
 
-function settingsView(settings: RemoteAccessSettings): RemoteAccessSettingsView {
-  const { serverToken, ...visible } = settings
-  return { ...visible, serverTokenConfigured: serverToken.length > 0 }
+function settingsView(settings: RemoteAccessSettings, defaultFrpcPath: string): RemoteAccessSettingsView {
+  const { serverToken, frpcPath, ...visible } = settings
+  return {
+    ...visible,
+    frpcPath: frpcPath?.trim() || defaultFrpcPath,
+    serverTokenConfigured: serverToken.length > 0,
+  }
 }
 
 function fingerprint(settings: RemoteAccessSettings): string {
@@ -119,6 +125,7 @@ export class RemoteAccessGateway extends Service {
         enabled: false,
         mode: 'lan',
         listenPort: this.config.listenPort,
+        frpcPath: this.config.frpcPath,
         serverAddr: '',
         serverPort: 7000,
         serverToken: '',
@@ -140,7 +147,7 @@ export class RemoteAccessGateway extends Service {
   /** Read secret-free configuration, runtime phase, and current authenticated links. */
   status(): RemoteAccessSnapshot {
     return {
-      settings: settingsView(this.scope.get()),
+      settings: settingsView(this.scope.get(), this.config.frpcPath),
       phase: this.phase,
       links: this.active?.proxy.links ?? [],
       ...(this.error === undefined ? {} : { error: this.error }),
@@ -154,7 +161,7 @@ export class RemoteAccessGateway extends Service {
     }
     const patch: Record<string, unknown> = {}
     for (const key of [
-      'mode', 'listenPort', 'serverAddr', 'serverPort', 'tunnelEndpoint', 'remotePort', 'publicUrl',
+      'mode', 'listenPort', 'frpcPath', 'serverAddr', 'serverPort', 'tunnelEndpoint', 'remotePort', 'publicUrl',
     ] as const) {
       if (request[key] !== undefined) patch[key] = request[key]
     }
@@ -181,6 +188,13 @@ export class RemoteAccessGateway extends Service {
     await this.scope.update({ enabled: false })
     await this.schedule(this.scope.get())
     return this.status()
+  }
+
+  /** Open the host file chooser and verify the selected frpc executable. */
+  async pickFrpc(signal: AbortSignal): Promise<string | null> {
+    const selected = await pickNativeFrpc(signal)
+    if (selected === null) return null
+    return this.ctx.subprocess.resolveExecutable(selected, undefined, signal)
   }
 
   private schedule(settings: RemoteAccessSettings): Promise<void> {
@@ -216,7 +230,7 @@ export class RemoteAccessGateway extends Service {
       try {
         if (settings.mode === 'tunnel') {
           frpc = await startFrpc(this.ctx.subprocess, {
-            executable: this.config.frpcPath,
+            executable: settings.frpcPath?.trim() || this.config.frpcPath,
             serverAddr: settings.serverAddr,
             serverPort: settings.serverPort,
             serverToken: settings.serverToken,

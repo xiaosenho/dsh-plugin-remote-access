@@ -43,7 +43,7 @@ allowBuilds:
 
 ## 隧道连接
 
-宿主机必须能执行与服务器 `frps` 版本兼容的 `frpc`。默认从 `PATH` 查找 `frpc`；可在 Web profile 的 `cordis.patch.yml` 覆盖路径和运行限制：
+宿主机必须能执行与服务器 `frps` 版本兼容的 `frpc`。可在设置面板手动填写绝对路径，或点击文件按钮通过系统原生选择器选择本地客户端。默认从 `PATH` 查找 `frpc`；Web profile 中的 `frpcPath` 继续作为部署级兜底值，其他运行限制也在此配置：
 
 ```yaml
 - id: remote-access
@@ -58,6 +58,7 @@ allowBuilds:
 
 在设置面板选择“隧道”并填写：
 
+- frpc 客户端：本地可执行文件路径，可使用宿主机原生文件选择器或手动填写。
 - 服务器地址：`frps` 控制地址或 IP。
 - 服务器端口：`frps.bindPort`，通常为 `7000`。
 - `server.token`：与服务端 `[auth].token` 相同的认证 token。
@@ -75,6 +76,7 @@ allowBuilds:
 - 未携带有效 Cookie 的 HTTP 和 WebSocket 请求都在认证代理处返回 `401`。
 - `server.token` 保存在 Harness 设置的 secret 字段中，仅写入随机私有目录内权限为 `0600` 的临时 TOML，不进入命令行、浏览器响应或访问链接。
 - 控制 API 只接受回环套接字、回环 Host 和同源浏览器请求。远程浏览器必须经过认证代理，由代理重写为回环上游请求。
+- frpc 原生文件选择器只能从宿主机页面触发；已认证的远程浏览器可以手动编辑路径，但不能在宿主机桌面弹出文件对话框。
 - 访问链接本身是 bearer credential。不要发到聊天群、工单或日志；怀疑泄露时关闭后重新开启服务。
 
 ## 开发
@@ -86,4 +88,4 @@ pnpm run test
 pnpm run build
 ```
 
-`pnpm pack` 生成可直接通过 `dsh plugin --profile web add ./xiaosenho-dsh-plugin-remote-access-0.1.2.tgz` 安装的预构建包。
+`pnpm pack` 生成可直接通过 `dsh plugin --profile web add ./xiaosenho-dsh-plugin-remote-access-0.1.3.tgz` 安装的预构建包。

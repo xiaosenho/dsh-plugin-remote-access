@@ -14,6 +14,8 @@ export interface RemoteAccessSettings {
   readonly mode: RemoteAccessMode
   /** Local authenticated-proxy port. */
   readonly listenPort: number
+  /** Host executable path selected for frpc; absent settings use the deployment default. */
+  readonly frpcPath?: string
   /** frps control-plane hostname or IP address. */
   readonly serverAddr: string
   /** frps control-plane port. */
@@ -29,7 +31,9 @@ export interface RemoteAccessSettings {
 }
 
 /** Secret-free settings returned to the browser. */
-export interface RemoteAccessSettingsView extends Omit<RemoteAccessSettings, 'serverToken'> {
+export interface RemoteAccessSettingsView extends Omit<RemoteAccessSettings, 'serverToken' | 'frpcPath'> {
+  /** Effective frpc executable path shown in Settings. */
+  readonly frpcPath: string
   /** Whether a non-empty frps token is stored. */
   readonly serverTokenConfigured: boolean
 }
@@ -51,6 +55,7 @@ export interface RemoteAccessSnapshot {
 export interface RemoteAccessUpdate {
   readonly mode?: RemoteAccessMode
   readonly listenPort?: number
+  readonly frpcPath?: string
   readonly serverAddr?: string
   readonly serverPort?: number
   /** A non-empty value replaces the stored frps token. */

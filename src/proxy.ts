@@ -9,6 +9,9 @@ import type { Duplex } from 'node:stream'
 const LOGIN_PATH = '/_dsh/remote-login'
 const COOKIE_NAME = 'dsh_remote'
 
+/** Marks requests forwarded by this plugin so host-only controls can reject them. */
+export const REMOTE_PROXY_HEADER = 'x-dsh-remote-access-proxy'
+
 /** Active authenticated proxy and the login links derived from it. */
 export interface AuthenticatedProxy {
   readonly port: number
@@ -52,6 +55,7 @@ function upstreamHeaders(request: IncomingMessage, upstreamPort: number, upgrade
   delete headers.cookie
   delete headers['proxy-authorization']
   delete headers['proxy-connection']
+  headers[REMOTE_PROXY_HEADER] = '1'
   headers.host = `127.0.0.1:${String(upstreamPort)}`
   if (headers.origin !== undefined) headers.origin = `http://127.0.0.1:${String(upstreamPort)}`
   headers['sec-fetch-site'] = 'same-origin'

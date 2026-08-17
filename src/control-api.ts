@@ -4,6 +4,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { WebRoute } from '@deepseek-ai/dsh-host-webserver'
 import type { RemoteAccessSnapshot, RemoteAccessUpdate } from './types.ts'
 import { parseRemoteAccessUpdate } from './wire.ts'
+import { REMOTE_PROXY_HEADER } from './proxy.ts'
 
 const BASE_PATH = '/_dsh/remote-access'
 
@@ -13,6 +14,7 @@ export interface RemoteAccessController {
   update(request: RemoteAccessUpdate): Promise<RemoteAccessSnapshot>
   enable(): Promise<RemoteAccessSnapshot>
   disable(): Promise<RemoteAccessSnapshot>
+  pickFrpc(signal: AbortSignal): Promise<string | null>
 }
 
 function isLoopbackAddress(address: string | undefined): boolean {
@@ -82,6 +84,21 @@ export function createControlRoute(controller: RemoteAccessController, maxBytes:
         }
         if (request.method === 'POST' && action === '/disable') {
           writeJson(response, 200, await controller.disable())
+          return
+        }
+        if (request.method === 'POST' && action === '/pick-frpc') {
+          if (request.headers[REMOTE_PROXY_HEADER] === '1') {
+            writeJson(response, 403, { error: 'the frpc file picker is available only on the host device' })
+            return
+          }
+          const abort = new AbortController()
+          const onClose = (): void => { abort.abort() }
+          response.once('close', onClose)
+          try {
+            writeJson(response, 200, { path: await controller.pickFrpc(abort.signal) })
+          } finally {
+            response.off('close', onClose)
+          }
           return
         }
         writeJson(response, 405, { error: 'method or action is not supported' })
