@@ -21,7 +21,7 @@ export interface RemoteAccessSettings {
   /** frps authentication token. */
   readonly serverToken: string
   /** Domain-based HTTP routing or direct TCP routing through a public IP and port. */
-  readonly tunnelEndpoint: TunnelEndpointMode
+  readonly tunnelEndpoint?: TunnelEndpointMode
   /** frps public TCP port used by the direct-IP endpoint. */
   readonly remotePort: number
   /** Public HTTP or HTTPS URL routed by frps to this client. */

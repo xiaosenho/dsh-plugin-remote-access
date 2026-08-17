@@ -59,7 +59,7 @@ function draftOf(snapshot: RemoteAccessSnapshot): Draft {
     serverAddr: snapshot.settings.serverAddr,
     serverPort: String(snapshot.settings.serverPort),
     serverToken: '',
-    tunnelEndpoint: snapshot.settings.tunnelEndpoint,
+    tunnelEndpoint: snapshot.settings.tunnelEndpoint ?? 'domain',
     protocol,
     publicAuthority,
     publicIp,

@@ -80,4 +80,4 @@ pnpm run test
 pnpm run build
 ```
 
-`pnpm pack` creates a prebuilt archive installable with `dsh plugin --profile web add ./dsh-plugin-remote-access-0.1.0.tgz`.
+`pnpm pack` creates a prebuilt archive installable with `dsh plugin --profile web add ./dsh-plugin-remote-access-0.1.2.tgz`.

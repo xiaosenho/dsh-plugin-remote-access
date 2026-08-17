@@ -80,4 +80,4 @@ pnpm run test
 pnpm run build
 ```
 
-`pnpm pack` 生成可直接通过 `dsh plugin --profile web add ./dsh-plugin-remote-access-0.1.0.tgz` 安装的预构建包。
+`pnpm pack` 生成可直接通过 `dsh plugin --profile web add ./dsh-plugin-remote-access-0.1.2.tgz` 安装的预构建包。

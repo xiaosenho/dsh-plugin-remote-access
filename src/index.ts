@@ -1,7 +1,7 @@
 /** Authenticated LAN and frpc tunnel access to the loopback Web application. */
 
-import { networkInterfaces } from 'node:os'
 import { isIP } from 'node:net'
+import { networkInterfaces } from 'node:os'
 import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
 import Schema from '@deepseek-ai/schemastery'
@@ -46,7 +46,7 @@ const SettingsSchema: Schema<RemoteAccessSettings> = Schema.object({
   serverAddr: Schema.string().required(),
   serverPort: Schema.natural().min(1).max(65535).required(),
   serverToken: Schema.string().role('secret').required(),
-  tunnelEndpoint: Schema.union([Schema.const('domain'), Schema.const('ip')]).required(),
+  tunnelEndpoint: Schema.union([Schema.const('domain'), Schema.const('ip')]),
   remotePort: Schema.natural().min(1).max(65535).required(),
   publicUrl: Schema.string().required(),
 })
@@ -74,10 +74,7 @@ function validateSettings(settings: RemoteAccessSettings): void {
   const hostname = url.hostname.startsWith('[') && url.hostname.endsWith(']')
     ? url.hostname.slice(1, -1)
     : url.hostname
-  if (settings.tunnelEndpoint === 'domain') {
-    if (isIP(hostname) !== 0) throw new Error('domain tunnel endpoint requires a public domain name')
-    return
-  }
+  if ((settings.tunnelEndpoint ?? 'domain') === 'domain') return
   if (url.protocol !== 'http:') throw new Error('direct IP tunnel endpoint supports HTTP only')
   if (isIP(hostname) === 0) throw new Error('direct IP tunnel endpoint requires a public IP address')
   const publicPort = url.port === '' ? 80 : Number(url.port)
@@ -125,7 +122,6 @@ export class RemoteAccessGateway extends Service {
         serverAddr: '',
         serverPort: 7000,
         serverToken: '',
-        tunnelEndpoint: 'domain',
         remotePort: 8080,
         publicUrl: '',
       },
@@ -225,7 +221,7 @@ export class RemoteAccessGateway extends Service {
             serverPort: settings.serverPort,
             serverToken: settings.serverToken,
             localPort: proxy.port,
-            tunnelEndpoint: settings.tunnelEndpoint,
+            tunnelEndpoint: settings.tunnelEndpoint ?? 'domain',
             remotePort: settings.remotePort,
             publicUrl: settings.publicUrl,
             graceMs: this.config.processGraceMs,
