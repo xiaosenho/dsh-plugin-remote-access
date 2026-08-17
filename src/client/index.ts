@@ -6,6 +6,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import { remoteAccessApi } from './api.ts'
 import { RemoteAccessSection } from './RemoteAccessSection.tsx'
 import { en, zh, type RemoteAccessLocaleKey } from './locales.ts'
+import { installRandomUuidCompatibility } from './random-uuid-compat.ts'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
@@ -20,6 +21,7 @@ export const inject = ['slots', 'locale']
 
 /** Register the localized Remote Access settings page. */
 export function apply(ctx: ClientContext): void {
+  installRandomUuidCompatibility()
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'remote-access: dictionaries')
   const t = ctx.locale.bind(NS)
   ctx.slots.inject('settings.section', () => ctx.slots.register({

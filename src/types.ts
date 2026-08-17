@@ -3,6 +3,9 @@
 /** Network path exposed by the remote-access service. */
 export type RemoteAccessMode = 'lan' | 'tunnel'
 
+/** Public endpoint strategy used by the frpc tunnel. */
+export type TunnelEndpointMode = 'domain' | 'ip'
+
 /** Durable settings owned by the remote-access plugin. */
 export interface RemoteAccessSettings {
   /** Whether the authenticated remote listener should be running. */
@@ -17,6 +20,10 @@ export interface RemoteAccessSettings {
   readonly serverPort: number
   /** frps authentication token. */
   readonly serverToken: string
+  /** Domain-based HTTP routing or direct TCP routing through a public IP and port. */
+  readonly tunnelEndpoint: TunnelEndpointMode
+  /** frps public TCP port used by the direct-IP endpoint. */
+  readonly remotePort: number
   /** Public HTTP or HTTPS URL routed by frps to this client. */
   readonly publicUrl: string
 }
@@ -50,5 +57,7 @@ export interface RemoteAccessUpdate {
   readonly serverToken?: string
   /** Clear the stored frps token. Mutually exclusive with `serverToken`. */
   readonly clearServerToken?: boolean
+  readonly tunnelEndpoint?: TunnelEndpointMode
+  readonly remotePort?: number
   readonly publicUrl?: string
 }

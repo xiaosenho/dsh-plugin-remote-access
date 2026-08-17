@@ -55,9 +55,13 @@ Select Tunnel in Settings and provide:
 - Server address: the `frps` control hostname or IP.
 - Server port: `frps.bindPort`, commonly `7000`.
 - `server.token`: the same token configured as `[auth].token` on the server.
-- Public protocol and domain: the complete HTTP(S) authority users open, such as `https://dsh.example.com`.
+- Public endpoint: choose Domain or IP + port.
+- Domain: choose HTTP or HTTPS and enter the authority users open, such as `https://dsh.example.com`.
+- IP + port: enter the public frps IP and the dedicated `remotePort`, such as `203.0.113.10:18080`.
 
-The plugin creates an HTTP-type frpc proxy with `customDomains`. Public HTTP can use `frps.vhostHTTPPort` directly. For public HTTPS, terminate TLS at a server-side reverse proxy or load balancer and forward to the frps HTTP vhost; this plugin does not present the local Web UI as a TLS origin. Public access should always use a trusted HTTPS certificate.
+Domain mode creates an [HTTP-type frpc proxy](https://gofrp.org/en/docs/examples/vhost-http/) with `customDomains`. Public HTTP can use `frps.vhostHTTPPort` directly. For public HTTPS, terminate TLS at a server-side reverse proxy or load balancer and forward to the frps HTTP vhost; this plugin does not present the local Web UI as a TLS origin. IP + port mode creates an frp [TCP proxy](https://gofrp.org/en/docs/features/tcp-udp/) and sets `remotePort`, so users open `http://<public-ip>:<remote-port>` without DNS. The frps `allowPorts` policy must permit that port. Direct IP mode is HTTP-only; use Domain mode with a trusted certificate for HTTPS.
+
+The plugin also installs a browser-side `crypto.randomUUID()` compatibility method when an HTTP origin provides `crypto.getRandomValues()` but not `randomUUID()`. This keeps Harness workspace RPC calls usable on ordinary LAN HTTP pages without changing the DeepSeek Harness repository.
 
 ## Security model
 

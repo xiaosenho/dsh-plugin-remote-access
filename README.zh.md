@@ -55,9 +55,13 @@ allowBuilds:
 - 服务器地址：`frps` 控制地址或 IP。
 - 服务器端口：`frps.bindPort`，通常为 `7000`。
 - `server.token`：与服务端 `[auth].token` 相同的认证 token。
-- 访问协议和公网域名：用户实际打开的完整 HTTP(S) authority，例如 `https://dsh.example.com`。
+- 公网入口：选择“域名”或“IP + 端口”。
+- 域名：选择 HTTP 或 HTTPS，并填写用户实际打开的 authority，例如 `https://dsh.example.com`。
+- IP + 端口：填写 frps 公网 IP 与独占的 `remotePort`，例如 `203.0.113.10:18080`。
 
-插件为 `frpc` 生成 HTTP 类型代理并设置 `customDomains`。公网 HTTP 可直接使用 `frps.vhostHTTPPort`。公网 HTTPS 应在服务器反向代理或负载均衡器终止 TLS，再转发到 `frps` 的 HTTP vhost；该插件不会把本地 Web UI 伪装成 TLS 源站。公网访问必须使用受信任的 HTTPS 证书。
+域名模式为 `frpc` 生成 [HTTP 类型代理](https://gofrp.org/zh-cn/docs/examples/vhost-http/)并设置 `customDomains`。公网 HTTP 可直接使用 `frps.vhostHTTPPort`。公网 HTTPS 应在服务器反向代理或负载均衡器终止 TLS，再转发到 `frps` 的 HTTP vhost；该插件不会把本地 Web UI 伪装成 TLS 源站。IP + 端口模式生成 frp [TCP 代理](https://gofrp.org/zh-cn/docs/features/tcp-udp/)并设置 `remotePort`，用户无需 DNS，直接打开 `http://<公网 IP>:<公网端口>`；frps 的 `allowPorts` 策略必须允许该端口。IP 直连仅支持 HTTP；HTTPS 请使用域名模式和受信任证书。
+
+当普通 HTTP 源提供 `crypto.getRandomValues()` 但没有 `crypto.randomUUID()` 时，插件还会在浏览器侧安装兼容方法，使 Harness 工作区 RPC 可以在局域网 HTTP 页面使用，而无需修改 DeepSeek Harness 仓库。
 
 ## 安全模型
 

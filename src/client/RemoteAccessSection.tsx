@@ -7,7 +7,7 @@ import {
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type {
-  RemoteAccessMode, RemoteAccessSnapshot, RemoteAccessUpdate,
+  RemoteAccessMode, RemoteAccessSnapshot, RemoteAccessUpdate, TunnelEndpointMode,
 } from '../types.ts'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import css from './RemoteAccessSection.module.css'
@@ -30,18 +30,25 @@ interface Draft {
   serverAddr: string
   serverPort: string
   serverToken: string
+  tunnelEndpoint: TunnelEndpointMode
   protocol: 'http' | 'https'
   publicAuthority: string
+  publicIp: string
+  remotePort: string
 }
 
 function draftOf(snapshot: RemoteAccessSnapshot): Draft {
   let protocol: Draft['protocol'] = 'https'
   let publicAuthority = ''
+  let publicIp = ''
   if (snapshot.settings.publicUrl !== '') {
     try {
       const url = new URL(snapshot.settings.publicUrl)
       protocol = url.protocol === 'http:' ? 'http' : 'https'
       publicAuthority = url.host
+      publicIp = url.hostname.startsWith('[') && url.hostname.endsWith(']')
+        ? url.hostname.slice(1, -1)
+        : url.hostname
     } catch {
       publicAuthority = snapshot.settings.publicUrl
     }
@@ -52,8 +59,11 @@ function draftOf(snapshot: RemoteAccessSnapshot): Draft {
     serverAddr: snapshot.settings.serverAddr,
     serverPort: String(snapshot.settings.serverPort),
     serverToken: '',
+    tunnelEndpoint: snapshot.settings.tunnelEndpoint,
     protocol,
     publicAuthority,
+    publicIp,
+    remotePort: String(snapshot.settings.remotePort),
   }
 }
 
@@ -78,9 +88,13 @@ function updateOf(draft: Draft): RemoteAccessUpdate {
     serverAddr: draft.serverAddr.trim(),
     serverPort: Number(draft.serverPort),
     ...(draft.serverToken === '' ? {} : { serverToken: draft.serverToken }),
-    publicUrl: draft.publicAuthority.trim() === ''
-      ? ''
-      : `${draft.protocol}://${draft.publicAuthority.trim()}`,
+    tunnelEndpoint: draft.tunnelEndpoint,
+    remotePort: Number(draft.remotePort),
+    publicUrl: draft.tunnelEndpoint === 'domain'
+      ? draft.publicAuthority.trim() === '' ? '' : `${draft.protocol}://${draft.publicAuthority.trim()}`
+      : draft.publicIp.trim() === '' || draft.remotePort.trim() === ''
+        ? ''
+        : `http://${draft.publicIp.includes(':') ? `[${draft.publicIp.trim()}]` : draft.publicIp.trim()}:${draft.remotePort.trim()}`,
   }
 }
 
@@ -196,21 +210,42 @@ export function RemoteAccessSection(props: RemoteAccessSectionProps): ReactNode 
                 onChange={event => { set('serverToken', event.target.value) }}
               />
             </Field>
-            <div className={css.twoColumnsWide}>
-              <div className={css.field}>
-                <span className={css.fieldLabel}>{t('publicProtocol')}</span>
-                <div className={css.segmented}>
-                  {(['http', 'https'] as const).map(protocol => (
-                    <button key={protocol} type="button" aria-pressed={draft.protocol === protocol} onClick={() => { set('protocol', protocol) }}>
-                      {protocol.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
+            <div className={css.field}>
+              <span className={css.fieldLabel}>{t('tunnelEndpoint')}</span>
+              <div className={css.segmented}>
+                {(['domain', 'ip'] as const).map(endpoint => (
+                  <button key={endpoint} type="button" aria-pressed={draft.tunnelEndpoint === endpoint} onClick={() => { set('tunnelEndpoint', endpoint) }}>
+                    {t(endpoint === 'domain' ? 'domainEndpoint' : 'ipEndpoint')}
+                  </button>
+                ))}
               </div>
-              <Field label={t('publicAuthority')}>
-                <Input value={draft.publicAuthority} onChange={event => { set('publicAuthority', event.target.value) }} />
-              </Field>
             </div>
+            {draft.tunnelEndpoint === 'domain' ? (
+              <div className={css.twoColumnsWide}>
+                <div className={css.field}>
+                  <span className={css.fieldLabel}>{t('publicProtocol')}</span>
+                  <div className={css.segmented}>
+                    {(['http', 'https'] as const).map(protocol => (
+                      <button key={protocol} type="button" aria-pressed={draft.protocol === protocol} onClick={() => { set('protocol', protocol) }}>
+                        {protocol.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <Field label={t('publicDomain')}>
+                  <Input value={draft.publicAuthority} onChange={event => { set('publicAuthority', event.target.value) }} />
+                </Field>
+              </div>
+            ) : (
+              <div className={css.twoColumns}>
+                <Field label={t('publicIp')}>
+                  <Input value={draft.publicIp} onChange={event => { set('publicIp', event.target.value) }} />
+                </Field>
+                <Field label={t('remotePort')}>
+                  <Input type="number" min="1" max="65535" value={draft.remotePort} onChange={event => { set('remotePort', event.target.value) }} />
+                </Field>
+              </div>
+            )}
           </>
         ) : null}
 

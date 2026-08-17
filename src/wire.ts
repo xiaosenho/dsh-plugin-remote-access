@@ -10,6 +10,8 @@ export const RemoteAccessUpdateSchema = z.strictObject({
   serverPort: z.number().int().min(1).max(65535).optional(),
   serverToken: z.string().optional(),
   clearServerToken: z.boolean().optional(),
+  tunnelEndpoint: z.enum(['domain', 'ip']).optional(),
+  remotePort: z.number().int().min(1).max(65535).optional(),
   publicUrl: z.string().optional(),
 })
 
@@ -20,6 +22,8 @@ export const RemoteAccessSnapshotSchema = z.strictObject({
     listenPort: z.number().int().min(1).max(65535),
     serverAddr: z.string(),
     serverPort: z.number().int().min(1).max(65535),
+    tunnelEndpoint: z.enum(['domain', 'ip']),
+    remotePort: z.number().int().min(1).max(65535),
     publicUrl: z.string(),
     serverTokenConfigured: z.boolean(),
   }),

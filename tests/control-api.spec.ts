@@ -12,6 +12,8 @@ const snapshot: RemoteAccessSnapshot = {
     listenPort: 3081,
     serverAddr: '',
     serverPort: 7000,
+    tunnelEndpoint: 'domain',
+    remotePort: 8080,
     publicUrl: '',
     serverTokenConfigured: false,
   },

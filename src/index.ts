@@ -1,6 +1,7 @@
 /** Authenticated LAN and frpc tunnel access to the loopback Web application. */
 
 import { networkInterfaces } from 'node:os'
+import { isIP } from 'node:net'
 import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
 import Schema from '@deepseek-ai/schemastery'
@@ -45,6 +46,8 @@ const SettingsSchema: Schema<RemoteAccessSettings> = Schema.object({
   serverAddr: Schema.string().required(),
   serverPort: Schema.natural().min(1).max(65535).required(),
   serverToken: Schema.string().role('secret').required(),
+  tunnelEndpoint: Schema.union([Schema.const('domain'), Schema.const('ip')]).required(),
+  remotePort: Schema.natural().min(1).max(65535).required(),
   publicUrl: Schema.string().required(),
 })
 
@@ -68,6 +71,17 @@ function validateSettings(settings: RemoteAccessSettings): void {
     || url.pathname !== '/' || url.search !== '' || url.hash !== '') {
     throw new Error('public URL must contain only an HTTP(S) scheme and authority')
   }
+  const hostname = url.hostname.startsWith('[') && url.hostname.endsWith(']')
+    ? url.hostname.slice(1, -1)
+    : url.hostname
+  if (settings.tunnelEndpoint === 'domain') {
+    if (isIP(hostname) !== 0) throw new Error('domain tunnel endpoint requires a public domain name')
+    return
+  }
+  if (url.protocol !== 'http:') throw new Error('direct IP tunnel endpoint supports HTTP only')
+  if (isIP(hostname) === 0) throw new Error('direct IP tunnel endpoint requires a public IP address')
+  const publicPort = url.port === '' ? 80 : Number(url.port)
+  if (publicPort !== settings.remotePort) throw new Error('public URL port must equal the frps remote port')
 }
 
 function lanBases(port: number): string[] {
@@ -111,6 +125,8 @@ export class RemoteAccessGateway extends Service {
         serverAddr: '',
         serverPort: 7000,
         serverToken: '',
+        tunnelEndpoint: 'domain',
+        remotePort: 8080,
         publicUrl: '',
       },
       validate: validateSettings,
@@ -141,7 +157,9 @@ export class RemoteAccessGateway extends Service {
       throw new Error('serverToken and clearServerToken are mutually exclusive')
     }
     const patch: Record<string, unknown> = {}
-    for (const key of ['mode', 'listenPort', 'serverAddr', 'serverPort', 'publicUrl'] as const) {
+    for (const key of [
+      'mode', 'listenPort', 'serverAddr', 'serverPort', 'tunnelEndpoint', 'remotePort', 'publicUrl',
+    ] as const) {
       if (request[key] !== undefined) patch[key] = request[key]
     }
     if (request.serverToken !== undefined) {
@@ -207,6 +225,8 @@ export class RemoteAccessGateway extends Service {
             serverPort: settings.serverPort,
             serverToken: settings.serverToken,
             localPort: proxy.port,
+            tunnelEndpoint: settings.tunnelEndpoint,
+            remotePort: settings.remotePort,
             publicUrl: settings.publicUrl,
             graceMs: this.config.processGraceMs,
             startupTimeoutMs: this.config.frpcStartupTimeoutMs,

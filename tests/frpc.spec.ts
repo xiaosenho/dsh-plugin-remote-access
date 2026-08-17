@@ -11,6 +11,8 @@ const spec: FrpcSpec = {
   serverPort: 7000,
   serverToken: 'server-secret',
   localPort: 3081,
+  tunnelEndpoint: 'domain',
+  remotePort: 8080,
   publicUrl: 'https://dsh.example.com',
   graceMs: 3000,
   startupTimeoutMs: 1,
@@ -68,5 +70,21 @@ describe('frpc lifecycle', () => {
     await expect(startFrpc(fake.runtime, spec)).rejects.toThrow('frpc exited (code 1, signal null)')
     const configPath = fake.spawn.mock.calls[0]?.[0].argv[2] as string
     await expect(access(configPath)).rejects.toThrow()
+  })
+
+  it('uses a dedicated frps TCP port for direct IP access', async () => {
+    const fake = fakeRuntime()
+    const handle = await startFrpc(fake.runtime, {
+      ...spec,
+      tunnelEndpoint: 'ip',
+      remotePort: 18080,
+      publicUrl: 'http://203.0.113.10:18080',
+    })
+    const configPath = fake.spawn.mock.calls[0]?.[0].argv[2] as string
+    const config = await readFile(configPath, 'utf8')
+    expect(config).toContain('type = "tcp"')
+    expect(config).toContain('remotePort = 18080')
+    expect(config).not.toContain('customDomains')
+    await handle.close()
   })
 })

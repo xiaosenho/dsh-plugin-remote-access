@@ -4,6 +4,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { SubprocessHandle, SubprocessRuntime } from '@deepseek-ai/dsh-subprocess'
+import type { TunnelEndpointMode } from './types.ts'
 
 /** Resolved tunnel start specification. */
 export interface FrpcSpec {
@@ -12,6 +13,8 @@ export interface FrpcSpec {
   readonly serverPort: number
   readonly serverToken: string
   readonly localPort: number
+  readonly tunnelEndpoint: TunnelEndpointMode
+  readonly remotePort: number
   readonly publicUrl: string
   readonly graceMs: number
   readonly startupTimeoutMs: number
@@ -29,7 +32,19 @@ function tomlString(value: string): string {
 }
 
 function renderConfig(spec: FrpcSpec): string {
-  const publicUrl = new URL(spec.publicUrl)
+  const proxy = spec.tunnelEndpoint === 'domain'
+    ? [
+        'type = "http"',
+        'localIP = "127.0.0.1"',
+        `localPort = ${String(spec.localPort)}`,
+        `customDomains = [${tomlString(new URL(spec.publicUrl).hostname)}]`,
+      ]
+    : [
+        'type = "tcp"',
+        'localIP = "127.0.0.1"',
+        `localPort = ${String(spec.localPort)}`,
+        `remotePort = ${String(spec.remotePort)}`,
+      ]
   return [
     `serverAddr = ${tomlString(spec.serverAddr)}`,
     `serverPort = ${String(spec.serverPort)}`,
@@ -40,10 +55,7 @@ function renderConfig(spec: FrpcSpec): string {
     '',
     '[[proxies]]',
     'name = "deepseek-harness-web"',
-    'type = "http"',
-    'localIP = "127.0.0.1"',
-    `localPort = ${String(spec.localPort)}`,
-    `customDomains = [${tomlString(publicUrl.hostname)}]`,
+    ...proxy,
     '',
   ].join('\n')
 }
