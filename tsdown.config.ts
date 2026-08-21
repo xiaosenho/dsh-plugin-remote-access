@@ -3,7 +3,7 @@ import { basename, dirname, resolve } from 'node:path'
 import { defineConfig } from 'tsdown'
 import { transform } from 'lightningcss'
 
-const PACKAGE_NAME = 'dsh-plugin-remote-access'
+const PACKAGE_NAME = '@xiaosenho/dsh-plugin-remote-access'
 const CSS_PREFIX = '\0remote-access-css:'
 const CSS_SUFFIX = '.mjs'
 const CLIENT_EXTERNALS = [

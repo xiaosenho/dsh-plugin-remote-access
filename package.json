@@ -1,6 +1,6 @@
 {
   "name": "@xiaosenho/dsh-plugin-remote-access",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Authenticated LAN and frpc tunnel access for the DeepSeek Harness Web UI",
   "type": "module",
   "main": "lib/index.js",
@@ -39,6 +39,8 @@
   "scripts": {
     "build": "tsdown",
     "prepare": "pnpm run build",
+    "verify": "node scripts/verify-publish.mjs",
+    "prepack": "node scripts/verify-publish.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
